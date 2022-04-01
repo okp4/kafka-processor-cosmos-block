@@ -7,6 +7,7 @@ plugins {
 
 group = "com.okp4"
 version = "1.0-SNAPSHOT"
+description = "A Kafka Streams Processor to unwrap CØSMOS blocks into CØSMOS transactions"
 
 repositories {
     mavenCentral()
