@@ -26,12 +26,19 @@ dependencies {
     testImplementation("io.kotest:kotest-property:$kotestVersion")
 }
 
+tasks.register("lint") {
+    dependsOn.addAll(listOf("ktlintCheck", "detekt"))
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.apply {
+        jvmTarget = "11"
+        allWarningsAsErrors = true
+    }
 }
 
 application {
