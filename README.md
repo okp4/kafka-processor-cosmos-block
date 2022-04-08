@@ -6,7 +6,8 @@
 
 ## Purpose
 
-The Kafka Processor `CØSMOS-Block` is basically a Stream Processor which continuously reads [CØSMOS blocks](https://docs.cosmos.network/master/intro/sdk-app-architecture.html) from an `input` Kafka topic, 
+The Kafka Processor `CØSMOS-Block` is basically a Stream Processor which continuously
+reads [CØSMOS blocks](https://docs.cosmos.network/master/intro/sdk-app-architecture.html) from an `input` Kafka topic,
 unwraps the CØSMOS transactions and sends them to an `output` topic.
 
 <p align="center">
@@ -20,13 +21,16 @@ which provides Kafka with CØSMOS blocks ready to be processed.
 
 Implementation mainly relies on [Kafka Streams API](https://kafka.apache.org/documentation/streams), library to create
 event-stream applications with the following features:
+
 - no external dependency other than Kafka itself,
 - simple and light library,
 - fault-tolerant and scalable.
 
 Moreover, this implementation:
+
 - uses [Kotkin](https://kotlinlang.org/) as primary coding language,
-- is as much as possible, lean, i.e. tries to minimize the dependencies to 3rd party libraries and the resulting package footprint.
+- is as much as possible, lean, i.e. tries to minimize the dependencies to 3rd party libraries and the resulting package
+  footprint.
 
 ## Build
 
@@ -47,7 +51,8 @@ If you are on linux/mac then open a terminal, go into the root directory and run
 ```
 
 This command line produces 2 JAR files:
-- a _regular_ JAR: `kafka-processor-cosmos-blocks-X.Y.jar`
+
+- a _regular_ JAR: `kafka-processor-cosmos-block-X.Y.jar`
 - a _fat_ JAR: `kafka-processor-cosmos-block-X.Y-standalone.jar`
 
 This last one is the one to use as it contains all the dependencies in it.
