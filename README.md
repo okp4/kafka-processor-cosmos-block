@@ -45,3 +45,9 @@ If you are on linux/mac then open a terminal, go into the root directory and run
 ```sh
 ./gradlew build
 ```
+
+This command line produces 2 JAR files:
+- a _regular_ JAR: `kafka-streams-cosmos-blocks-X.Y.jar`
+- a _fat_ JAR: `kafka-streams-cosmos-block-X.Y-standalone.jar`
+
+This last one is the one to use as it contains all the dependencies in it.
