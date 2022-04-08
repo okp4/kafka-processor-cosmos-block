@@ -1,1 +1,1 @@
-rootProject.name = "kafka-streams-cosmos-block"
+rootProject.name = "kafka-processor-cosmos-block"
