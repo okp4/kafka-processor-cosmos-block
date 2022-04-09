@@ -1,1 +1,6 @@
 .vscode/
+*.iml
+.idea/
+build/
+.gradle/
+bin/
