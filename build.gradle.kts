@@ -67,6 +67,8 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
     testImplementation("io.kotest:kotest-property:$kotestVersion")
     testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
+
+    testImplementation("org.apache.kafka:kafka-streams-test-utils:$kafkaStreamVersion")
 }
 
 tasks {
