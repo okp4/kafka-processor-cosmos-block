@@ -22,12 +22,11 @@ fun topology(props: Properties): Topology {
         "Option 'topic.out' was not specified."
     }
 
-    val streamsBuilder = StreamsBuilder()
-
-    streamsBuilder.stream(topicIn, Consumed.with(Serdes.String(), Serdes.String()).withName("input"))
-        .peek({ _, _ -> logger.info("Received a message") }, Named.`as`("log"))
-        .map({ k, v -> KeyValue(k, "Hello $v!") }, Named.`as`("map-value"))
-        .to(topicOut, Produced.with(Serdes.String(), Serdes.String()).withName("output"))
-
-    return streamsBuilder.build()
+    return StreamsBuilder()
+        .apply {
+            stream(topicIn, Consumed.with(Serdes.String(), Serdes.String()).withName("input"))
+                .peek({ _, _ -> logger.info("Received a message") }, Named.`as`("log"))
+                .map({ k, v -> KeyValue(k, "Hello $v!") }, Named.`as`("map-value"))
+                .to(topicOut, Produced.with(Serdes.String(), Serdes.String()).withName("output"))
+        }.build()
 }

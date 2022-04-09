@@ -9,8 +9,6 @@ import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.TopologyTestDriver
 
 class TopologyTest : BehaviorSpec({
-    // isolationMode = IsolationMode.InstancePerLeaf
-
     val stringSerde = Serdes.StringSerde()
     val config = mapOf(
         StreamsConfig.APPLICATION_ID_CONFIG to "simple",
