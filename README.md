@@ -3,6 +3,7 @@
 > A Kafka Streams Processor to unwrap CØSMOS blocks into CØSMOS transactions.
 
 [![version](https://img.shields.io/github/v/release/okp4/kafka-processor-cosmos-block)](https://github.com/okp4/kafka-processor-cosmos-block/releases)
+[![build](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/build.yml/badge.svg)](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/build.yml)
 [![conventional commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
