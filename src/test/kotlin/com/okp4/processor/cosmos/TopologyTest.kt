@@ -36,28 +36,31 @@ class TopologyTest : BehaviorSpec({
         )
         .setBody(
             TxOuterClass.TxBody.newBuilder()
-                .setMemo("test")
                 .addMessages(
                     Any.newBuilder()
-                    .setValue(ByteString.copyFromUtf8("test message"))
-                    .build()
+                        .setValue(ByteString.copyFromUtf8("test message"))
+                        .build()
                 )
                 .build()
         )
         .build()
+    val txDefaultBA = txDefault.toByteArray()
+    val txSimple = TxOuterClass.Tx.newBuilder()
+        .addSignatures(ByteString.copyFromUtf8(""))
+        .build()
+    val txSimpleBA = txSimple.toByteArray()
     val blockTx = Block.newBuilder()
         .setData(Types.Data.newBuilder().addTxs(txDefault.toByteString()))
         .build()
         .toByteArray()
     val blockTxs = Block.newBuilder()
-        .setData(Types.Data.newBuilder().addTxs(txDefault.toByteString()))
-        .setData(Types.Data.newBuilder().addTxs(txDefault.toByteString()))
-        .setData(Types.Data.newBuilder().addTxs(txDefault.toByteString()))
+        .setData(Types.Data.newBuilder().addTxs(txSimple.toByteString()))
+        .setData(Types.Data.newBuilder().addTxs(txSimple.toByteString()))
+        .setData(Types.Data.newBuilder().addTxs(txSimple.toByteString()))
         .build()
         .toByteArray()
-    val blockEmpty = Block.parseFrom("".toByteArray())
-        .toByteArray()
-    val blockFaulty = Block.parseFrom("".toByteArray())
+    val blockEmpty = Block.newBuilder()
+        .build()
         .toByteArray()
 
     given("A topology") {
@@ -68,10 +71,9 @@ class TopologyTest : BehaviorSpec({
 
         withData(
             mapOf(
-                "block with one transaction" to arrayOf(blockTx, listOf(txDefault.toByteArray()), 1),
-                "block with three transactions" to arrayOf(blockTxs, listOf(txDefault.toByteArray()), 3),
+                "block with one transaction" to arrayOf(blockTx, listOf(txDefaultBA), 1),
+                "block with three transactions" to arrayOf(blockTxs, listOf(txSimpleBA, txSimpleBA, txSimpleBA), 3),
                 "block with no transaction" to arrayOf(blockEmpty, "".toByteArray(), 0),
-                "block with faulty transaction" to arrayOf(blockFaulty, "".toByteArray(), 0)
             )
         ) { (block, expectedTx, nbTxs) ->
             When("sending block with $nbTxs txs to the input topic ($inputTopic)") {
