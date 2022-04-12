@@ -54,9 +54,17 @@ class TopologyTest : BehaviorSpec({
         .build()
         .toByteArray()
     val blockTxs = Block.newBuilder()
-        .setData(Types.Data.newBuilder().addTxs(txSimple.toByteString()))
-        .setData(Types.Data.newBuilder().addTxs(txSimple.toByteString()))
-        .setData(Types.Data.newBuilder().addTxs(txSimple.toByteString()))
+        .setData(
+            Types.Data.newBuilder()
+                .addAllTxs(
+                    listOf(
+                        txSimple.toByteString(),
+                        txSimple.toByteString(),
+                        txSimple.toByteString(),
+                    )
+                )
+                .build()
+        )
         .build()
         .toByteArray()
     val blockEmpty = Block.newBuilder()
@@ -79,7 +87,7 @@ class TopologyTest : BehaviorSpec({
             When("sending block with $nbTxs txs to the input topic ($inputTopic)") {
                 inputTopic.pipeInput("", block as ByteArray)
 
-                then("message is received from the output topic ($outputTopic)") {
+                then("$nbTxs are received from the output topic ($outputTopic)") {
                     val result = outputTopic.readValuesToList()
 
                     result shouldNotBe null
