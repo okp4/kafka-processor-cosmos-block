@@ -70,6 +70,7 @@ class TopologyTest : BehaviorSpec({
     val blockEmpty = Block.newBuilder()
         .build()
         .toByteArray()
+    val brokenBlock = "test".toByteArray()
 
     given("A topology") {
         val topology = topology(config)
@@ -82,6 +83,7 @@ class TopologyTest : BehaviorSpec({
                 "block with one transaction" to arrayOf(blockTx, listOf(txDefaultBA), 1),
                 "block with three transactions" to arrayOf(blockTxs, listOf(txSimpleBA, txSimpleBA, txSimpleBA), 3),
                 "block with no transaction" to arrayOf(blockEmpty, "".toByteArray(), 0),
+                "broken block" to arrayOf(brokenBlock, "".toByteArray(), 0)
             )
         ) { (block, expectedTx, nbTxs) ->
             When("sending block with $nbTxs txs to the input topic ($inputTopic)") {

@@ -2,6 +2,7 @@ package com.okp4.processor.cosmos
 
 import cosmos.tx.v1beta1.TxOuterClass
 import org.apache.kafka.common.serialization.Serdes
+import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.kstream.Consumed
@@ -26,9 +27,24 @@ fun topology(props: Properties): Topology {
     return StreamsBuilder()
         .apply {
             stream(topicIn, Consumed.with(Serdes.String(), Serdes.ByteArray()).withName("input"))
-                .mapValues({ v -> BlockOuterClass.Block.parseFrom(v) }, Named.`as`("block-deserialization"))
-                .peek({ _, block -> logger.debug("→ block ${block.header.height} (${block.data.txsCount} txs)") }, Named.`as`("log"))
-                .flatMapValues({ block -> block.data.txsList.map { tx -> TxOuterClass.Tx.parseFrom(tx).toByteArray() } }, Named.`as`("extract-transactions"))
-                .to(topicOut, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("output"))
+                .map(
+                    { k, v ->
+                        try {
+                            KeyValue(k, BlockOuterClass.Block.parseFrom(v))
+                        } catch (e: Exception) {
+                            logger.error("Deserialization failed for block with key $k: ${e.message}")
+                            KeyValue(k, BlockOuterClass.Block.getDefaultInstance())
+                        }
+                    }, Named.`as`("block-deserialization")
+                ).peek(
+                    { _, block -> logger.debug("→ block ${block.header.height} (${block.data.txsCount} txs)") },
+                    Named.`as`("log")
+                ).flatMapValues({ block ->
+                    block.data.txsList.map { tx ->
+                        TxOuterClass.Tx.parseFrom(tx).toByteArray()
+                    }
+                }, Named.`as`("extract-transactions")).to(
+                    topicOut, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("output")
+                )
         }.build()
 }
