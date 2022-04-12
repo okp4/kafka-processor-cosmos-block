@@ -13,6 +13,25 @@ import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.TopologyTestDriver
 import tendermint.types.BlockOuterClass.Block
 import tendermint.types.Types
+import kotlin.random.Random.Default.nextBytes
+
+fun List<TxOuterClass.Tx>.wrapIntoBlock(height: Long): Block = Block.newBuilder().setHeader(
+    Types.Header.newBuilder().setChainId("okp4-testnet").setHeight(height).build()
+).setData(
+    Types.Data.newBuilder().addAllTxs(this.map { it.toByteString() }).build()
+).build()
+
+val txDefault: TxOuterClass.Tx = TxOuterClass.Tx.newBuilder().addSignatures(ByteString.copyFromUtf8("")).setAuthInfo(
+    AuthInfo.newBuilder().addSignerInfos(
+        TxOuterClass.SignerInfo.getDefaultInstance()
+    ).build()
+).setBody(
+    TxOuterClass.TxBody.newBuilder().addMessages(
+        Any.newBuilder().setValue(ByteString.copyFromUtf8("test message")).build()
+    ).build()
+).build()
+
+val txSimple: TxOuterClass.Tx = TxOuterClass.Tx.newBuilder().addSignatures(ByteString.copyFromUtf8("")).build()
 
 class TopologyTest : BehaviorSpec({
     val stringSerde = Serdes.StringSerde()
@@ -24,54 +43,6 @@ class TopologyTest : BehaviorSpec({
         "topic.out" to "out"
     ).toProperties()
 
-    // Blocks definitions
-    val txDefault = TxOuterClass.Tx.newBuilder()
-        .addSignatures(ByteString.copyFromUtf8(""))
-        .setAuthInfo(
-            AuthInfo.newBuilder()
-                .addSignerInfos(
-                    TxOuterClass.SignerInfo.getDefaultInstance()
-                )
-                .build()
-        )
-        .setBody(
-            TxOuterClass.TxBody.newBuilder()
-                .addMessages(
-                    Any.newBuilder()
-                        .setValue(ByteString.copyFromUtf8("test message"))
-                        .build()
-                )
-                .build()
-        )
-        .build()
-    val txDefaultBA = txDefault.toByteArray()
-    val txSimple = TxOuterClass.Tx.newBuilder()
-        .addSignatures(ByteString.copyFromUtf8(""))
-        .build()
-    val txSimpleBA = txSimple.toByteArray()
-    val blockTx = Block.newBuilder()
-        .setData(Types.Data.newBuilder().addTxs(txDefault.toByteString()))
-        .build()
-        .toByteArray()
-    val blockTxs = Block.newBuilder()
-        .setData(
-            Types.Data.newBuilder()
-                .addAllTxs(
-                    listOf(
-                        txSimple.toByteString(),
-                        txSimple.toByteString(),
-                        txSimple.toByteString(),
-                    )
-                )
-                .build()
-        )
-        .build()
-        .toByteArray()
-    val blockEmpty = Block.newBuilder()
-        .build()
-        .toByteArray()
-    val brokenBlock = "test".toByteArray()
-
     given("A topology") {
         val topology = topology(config)
         val testDriver = TopologyTestDriver(topology, config)
@@ -80,20 +51,39 @@ class TopologyTest : BehaviorSpec({
 
         withData(
             mapOf(
-                "block with one transaction" to arrayOf(blockTx, listOf(txDefaultBA), 1),
-                "block with three transactions" to arrayOf(blockTxs, listOf(txSimpleBA, txSimpleBA, txSimpleBA), 3),
-                "block with no transaction" to arrayOf(blockEmpty, "".toByteArray(), 0),
-                "broken block" to arrayOf(brokenBlock, "".toByteArray(), 0)
+                "block with no transaction" to arrayOf(listOf<TxOuterClass.Tx>().wrapIntoBlock(12)),
+                "block with one transaction" to arrayOf(listOf(txDefault, txSimple).wrapIntoBlock(13)),
+                "block with three transaction" to arrayOf(listOf(txDefault, txSimple, txSimple).wrapIntoBlock(14)),
             )
-        ) { (block, expectedTx, nbTxs) ->
-            When("sending block with $nbTxs txs to the input topic ($inputTopic)") {
-                inputTopic.pipeInput("", block as ByteArray)
+        ) { (block) ->
+            and("a block carrying ${block.data.txsCount} transactions") {
+                val serializedBlock = block.toByteArray()
 
-                then("$nbTxs are received from the output topic ($outputTopic)") {
-                    val result = outputTopic.readValuesToList()
+                When("sending the block to the input topic ($inputTopic)") {
+                    inputTopic.pipeInput("", serializedBlock)
 
-                    result shouldNotBe null
-                    result shouldBe expectedTx
+                    then("${block.data.txsCount} transactions are received from the output topic ($outputTopic)") {
+                        val result = outputTopic.readValuesToList()
+
+                        result shouldNotBe null
+                        result.size shouldBe block.data.txsCount
+
+                        result.indices.forEach {
+                            result[it] shouldBe block.data.txsList[it].toByteArray()
+                        }
+                    }
+                }
+            }
+        }
+
+        and("an invalid block") {
+            val invalidBlock = nextBytes(500)
+
+            When("sending the block to the input topic ($inputTopic)") {
+                inputTopic.pipeInput("", invalidBlock)
+
+                then("no transactions are received from the output topic ($outputTopic)") {
+                    outputTopic.isEmpty shouldBe true
                 }
             }
         }
