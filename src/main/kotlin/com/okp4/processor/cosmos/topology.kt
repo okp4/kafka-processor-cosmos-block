@@ -35,19 +35,21 @@ fun topology(props: Properties): Topology {
                             KeyValue(k, BlockOuterClass.Block.getDefaultInstance())
                         }
                     }, Named.`as`("block-deserialization")
-                ).peek(
-                    { _, block -> logger.debug("→ block ${block.header.height} (${block.data.txsCount} txs)") },
-                    Named.`as`("log")
-                ).flatMapValues(
-                    { block ->
-                        block.data.txsList
-                    }, Named.`as`("extract-transactions")
-                ).mapValues(
-                    { tx ->
-                        tx.toByteArray()
-                    }, Named.`as`("convert-transactions-to-bytearray")
-                ).to(
-                    topicOut, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("output")
-                )
-        }.build()
-}
+                    )
+                    .peek(
+                        { _, block -> logger.debug("→ block ${block.header.height} (${block.data.txsCount} txs)") },
+                        Named.`as`("log")
+                    ).flatMapValues(
+                        { block ->
+                            block.data.txsList
+                        }, Named.`as`("extract-transactions")
+                        ).mapValues(
+                            { tx ->
+                                tx.toByteArray()
+                            }, Named.`as`("convert-transactions-to-bytearray")
+                            ).to(
+                                topicOut, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("output")
+                            )
+                    }.build()
+            }
+            
