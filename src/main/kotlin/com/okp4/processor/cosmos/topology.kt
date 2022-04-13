@@ -8,10 +8,11 @@ import org.apache.kafka.streams.kstream.Consumed
 import org.apache.kafka.streams.kstream.Named
 import org.apache.kafka.streams.kstream.Produced
 import org.slf4j.LoggerFactory
+import tendermint.types.BlockOuterClass
 import java.util.*
 
 /**
- * Simple Kafka Stream Processor that consumes a message on a topic and returns a new message on another.
+ * Simple Kafka Stream Processor that consumes a block on a topic and returns his transactions on another.
  */
 fun topology(props: Properties): Topology {
     val logger = LoggerFactory.getLogger("com.okp4.processor.cosmos.topology")
@@ -24,9 +25,31 @@ fun topology(props: Properties): Topology {
 
     return StreamsBuilder()
         .apply {
-            stream(topicIn, Consumed.with(Serdes.String(), Serdes.String()).withName("input"))
-                .peek({ _, _ -> logger.info("Received a message") }, Named.`as`("log"))
-                .map({ k, v -> KeyValue(k, "Hello $v!") }, Named.`as`("map-value"))
-                .to(topicOut, Produced.with(Serdes.String(), Serdes.String()).withName("output"))
-        }.build()
-}
+            stream(topicIn, Consumed.with(Serdes.String(), Serdes.ByteArray()).withName("input"))
+                .map(
+                    { k, v ->
+                        try {
+                            KeyValue(k, BlockOuterClass.Block.parseFrom(v))
+                        } catch (e: Exception) {
+                            logger.error("Deserialization failed for block with key $k: ${e.message}")
+                            KeyValue(k, BlockOuterClass.Block.getDefaultInstance())
+                        }
+                    }, Named.`as`("block-deserialization")
+                    )
+                    .peek(
+                        { _, block -> logger.debug("→ block ${block.header.height} (${block.data.txsCount} txs)") },
+                        Named.`as`("log")
+                    ).flatMapValues(
+                        { block ->
+                            block.data.txsList
+                        }, Named.`as`("extract-transactions")
+                        ).mapValues(
+                            { tx ->
+                                tx.toByteArray()
+                            }, Named.`as`("convert-transactions-to-bytearray")
+                            ).to(
+                                topicOut, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("output")
+                            )
+                    }.build()
+            }
+            

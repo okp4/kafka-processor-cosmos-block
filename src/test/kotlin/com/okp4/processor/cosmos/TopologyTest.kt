@@ -1,5 +1,9 @@
 package com.okp4.processor.cosmos
 
+import com.google.protobuf.Any
+import com.google.protobuf.ByteString
+import cosmos.tx.v1beta1.TxOuterClass
+import cosmos.tx.v1beta1.TxOuterClass.AuthInfo
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.shouldBe
@@ -7,9 +11,31 @@ import io.kotest.matchers.shouldNotBe
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.TopologyTestDriver
+import tendermint.types.BlockOuterClass.Block
+import tendermint.types.Types
+import kotlin.random.Random.Default.nextBytes
+
+fun List<TxOuterClass.Tx>.wrapIntoBlock(height: Long): Block = Block.newBuilder().setHeader(
+    Types.Header.newBuilder().setChainId("okp4-testnet").setHeight(height).build()
+).setData(
+    Types.Data.newBuilder().addAllTxs(this.map { it.toByteString() }).build()
+).build()
+
+val txDefault: TxOuterClass.Tx = TxOuterClass.Tx.newBuilder().addSignatures(ByteString.copyFromUtf8("")).setAuthInfo(
+    AuthInfo.newBuilder().addSignerInfos(
+        TxOuterClass.SignerInfo.getDefaultInstance()
+    ).build()
+).setBody(
+    TxOuterClass.TxBody.newBuilder().addMessages(
+        Any.newBuilder().setValue(ByteString.copyFromUtf8("test message")).build()
+    ).build()
+).build()
+
+val txSimple: TxOuterClass.Tx = TxOuterClass.Tx.newBuilder().addSignatures(ByteString.copyFromUtf8("")).build()
 
 class TopologyTest : BehaviorSpec({
     val stringSerde = Serdes.StringSerde()
+    val byteArraySerde = Serdes.ByteArraySerde()
     val config = mapOf(
         StreamsConfig.APPLICATION_ID_CONFIG to "simple",
         StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to "dummy:1234",
@@ -20,23 +46,44 @@ class TopologyTest : BehaviorSpec({
     given("A topology") {
         val topology = topology(config)
         val testDriver = TopologyTestDriver(topology, config)
-        val inputTopic = testDriver.createInputTopic("in", stringSerde.serializer(), stringSerde.serializer())
-        val outputTopic = testDriver.createOutputTopic("out", stringSerde.deserializer(), stringSerde.deserializer())
+        val inputTopic = testDriver.createInputTopic("in", stringSerde.serializer(), byteArraySerde.serializer())
+        val outputTopic = testDriver.createOutputTopic("out", stringSerde.deserializer(), byteArraySerde.deserializer())
 
         withData(
             mapOf(
-                "simple message" to arrayOf("John Doe", "Hello John Doe!"),
-                "empty message" to arrayOf("", "Hello !"),
+                "block with no transaction" to arrayOf(listOf<TxOuterClass.Tx>().wrapIntoBlock(12)),
+                "block with one transaction" to arrayOf(listOf(txDefault, txSimple).wrapIntoBlock(13)),
+                "block with three transaction" to arrayOf(listOf(txDefault, txSimple, txSimple).wrapIntoBlock(14)),
             )
-        ) { (message, expectedMessage) ->
-            When("sending the message <$message> to the input topic ($inputTopic)") {
-                inputTopic.pipeInput("", message)
+        ) { (block) ->
+            and("a block carrying ${block.data.txsCount} transactions") {
+                val serializedBlock = block.toByteArray()
 
-                then("message is received from the output topic ($outputTopic)") {
-                    val result = outputTopic.readKeyValue()
+                When("sending the block to the input topic ($inputTopic)") {
+                    inputTopic.pipeInput("", serializedBlock)
 
-                    result shouldNotBe null
-                    result.value shouldBe expectedMessage
+                    then("${block.data.txsCount} transactions are received from the output topic ($outputTopic)") {
+                        val result = outputTopic.readValuesToList()
+
+                        result shouldNotBe null
+                        result.size shouldBe block.data.txsCount
+
+                        result.indices.forEach {
+                            result[it] shouldBe block.data.txsList[it].toByteArray()
+                        }
+                    }
+                }
+            }
+        }
+
+        and("an invalid block") {
+            val invalidBlock = nextBytes(500)
+
+            When("sending the block to the input topic ($inputTopic)") {
+                inputTopic.pipeInput("", invalidBlock)
+
+                then("no transactions are received from the output topic ($outputTopic)") {
+                    outputTopic.isEmpty shouldBe true
                 }
             }
         }
