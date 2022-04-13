@@ -36,41 +36,46 @@ fun topology(props: Properties): Topology {
                             KeyValue(k, Pair(v, e.message))
                         }
                     }, Named.`as`("block-deserialization")
-                )
-                .split()
-                .branch({ _, v -> !v.second.isNullOrEmpty() }, Branched.withConsumer { ks ->
-                    ks.mapValues { pair ->
-                        pair.first
-                    }
-                        .to(
-                            topicError, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("error")
-                        )
-                })
-                .defaultBranch(Branched.withConsumer { ks ->
-                    ks.mapValues(
-                        { pair ->
-                            BlockOuterClass.Block.parseFrom(pair.first)
-                        },
-                        Named.`as`("extract-block")
                     )
-                        .peek(
-                            { _, block -> logger.debug("→ block ${block.header.height} (${block.data.txsCount} txs)") },
-                            Named.`as`("log")
-                        )
-                        .flatMapValues(
-                            { block ->
-                                block.data.txsList
-                            }, Named.`as`("extract-transactions")
-                        )
-                        .mapValues(
-                            { tx ->
-                                tx.toByteArray()
-                            }, Named.`as`("convert-transactions-to-bytearray")
-                        )
-                        .to(
-                            topicOut, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("output")
-                        )
-                })
-
-        }.build()
-}
+                    .split()
+                    .branch(
+                        { _, v -> !v.second.isNullOrEmpty() },
+                        Branched.withConsumer { ks ->
+                            ks.mapValues { pair ->
+                                pair.first
+                            }
+                                .to(
+                                    topicError, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("error")
+                                )
+                        }
+                    )
+                    .defaultBranch(
+                        Branched.withConsumer { ks ->
+                            ks.mapValues(
+                                { pair ->
+                                    BlockOuterClass.Block.parseFrom(pair.first)
+                                },
+                                Named.`as`("extract-block")
+                            )
+                                .peek(
+                                    { _, block -> logger.debug("→ block ${block.header.height} (${block.data.txsCount} txs)") },
+                                    Named.`as`("log")
+                                )
+                                .flatMapValues(
+                                    { block ->
+                                        block.data.txsList
+                                    }, Named.`as`("extract-transactions")
+                                    )
+                                    .mapValues(
+                                        { tx ->
+                                            tx.toByteArray()
+                                        }, Named.`as`("convert-transactions-to-bytearray")
+                                        )
+                                        .to(
+                                            topicOut, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("output")
+                                        )
+                                }
+                            )
+                    }.build()
+            }
+            
