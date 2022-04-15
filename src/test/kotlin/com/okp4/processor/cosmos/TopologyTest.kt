@@ -40,7 +40,8 @@ class TopologyTest : BehaviorSpec({
         StreamsConfig.APPLICATION_ID_CONFIG to "simple",
         StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to "dummy:1234",
         "topic.in" to "in",
-        "topic.out" to "out"
+        "topic.out" to "out",
+        "topic.error" to "error"
     ).toProperties()
 
     given("A topology") {
@@ -48,6 +49,7 @@ class TopologyTest : BehaviorSpec({
         val testDriver = TopologyTestDriver(topology, config)
         val inputTopic = testDriver.createInputTopic("in", stringSerde.serializer(), byteArraySerde.serializer())
         val outputTopic = testDriver.createOutputTopic("out", stringSerde.deserializer(), byteArraySerde.deserializer())
+        val errorTopic = testDriver.createOutputTopic("error", stringSerde.deserializer(), byteArraySerde.deserializer())
 
         withData(
             mapOf(
@@ -84,6 +86,12 @@ class TopologyTest : BehaviorSpec({
 
                 then("no transactions are received from the output topic ($outputTopic)") {
                     outputTopic.isEmpty shouldBe true
+
+                    val result = errorTopic.readValuesToList()
+
+                    result shouldNotBe null
+                    result.size shouldBe 1
+                    result[0] shouldBe invalidBlock
                 }
             }
         }
