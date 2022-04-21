@@ -134,7 +134,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/okp4/kafka-connector-cosmos")
+            url = uri("https://maven.pkg.github.com/okp4/${project.name}")
             credentials {
                 username = project.property("maven.credentials.username") as String
                 password = project.property("maven.credentials.password") as String
