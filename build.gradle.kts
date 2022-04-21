@@ -56,7 +56,7 @@ dependencies {
     api("org.slf4j:slf4j-api:$slf4jVersion")
     api("org.slf4j:slf4j-log4j12:$slf4jVersion")
 
-    val micrometerVersion = "1.8.4"
+    val micrometerVersion = "1.8.5"
     api("io.micrometer:micrometer-core:$micrometerVersion")
     api("io.micrometer:micrometer-registry-prometheus:$micrometerVersion")
 
