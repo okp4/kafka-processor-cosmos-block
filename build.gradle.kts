@@ -63,7 +63,7 @@ dependencies {
     val cosmosSdkVersion = "1.1"
     implementation("com.okp4.grpc:cosmos-sdk:$cosmosSdkVersion")
 
-    val grpcVersion = "1.45.1"
+    val grpcVersion = "1.46.0"
     api("io.grpc:grpc-protobuf:$grpcVersion")
 
     testImplementation(kotlin("test"))
