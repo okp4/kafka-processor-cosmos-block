@@ -29,49 +29,48 @@ fun topology(props: Properties): Topology {
             { v ->
                 Pair(v, kotlin.runCatching { BlockOuterClass.Block.parseFrom(v) })
             }, Named.`as`("block-deserialization")
-            ).split().branch(
-                { _, v -> v.second.isFailure },
-                Branched.withConsumer { ks ->
-                    ks.peek(
-                        { k, v ->
-                            v.second.onFailure {
-                                logger.warn("Deserialization failed for block with key <$k>: ${it.message}", it)
-                            }
-                        },
-                        Named.`as`("log-deserialization-failure")
-                    )
-                        .mapValues({ pair -> pair.first }, Named.`as`("extract-original-bytearray"))
-                        .apply {
-                            if (!topicError.isNullOrEmpty()) {
-                                logger.info("Failed block will be sent to the topic $topicError")
-                                to(
-                                    topicError, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("error")
-                                )
-                            }
+        ).split().branch(
+            { _, v -> v.second.isFailure },
+            Branched.withConsumer { ks ->
+                ks.peek(
+                    { k, v ->
+                        v.second.onFailure {
+                            logger.warn("Deserialization failed for block with key <$k>: ${it.message}", it)
                         }
-                }
-            ).defaultBranch(
-                Branched.withConsumer { ks ->
-                    ks.mapValues(
-                        { v ->
-                            v.second.getOrThrow()
-                        }, Named.`as`("extract-block")
-                        ).peek(
-                            { _, block -> logger.debug("→ block ${block.header.height} (${block.data.txsCount} txs)") },
-                            Named.`as`("log-block-extraction")
-                        ).flatMapValues(
-                            { block ->
-                                block.data.txsList
-                            }, Named.`as`("extract-transactions")
-                            ).mapValues(
-                                { tx ->
-                                    tx.toByteArray()
-                                }, Named.`as`("convert-transactions-to-bytearray")
-                                ).to(
-                                    topicOut, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("output")
-                                )
-                            }
-                        )
-                    }.build()
-                }
-                
+                    },
+                    Named.`as`("log-deserialization-failure")
+                )
+                    .mapValues({ pair -> pair.first }, Named.`as`("extract-original-bytearray"))
+                    .apply {
+                        if (!topicError.isNullOrEmpty()) {
+                            logger.info("Failed block will be sent to the topic $topicError")
+                            to(
+                                topicError, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("error")
+                            )
+                        }
+                    }
+            }
+        ).defaultBranch(
+            Branched.withConsumer { ks ->
+                ks.mapValues(
+                    { v ->
+                        v.second.getOrThrow()
+                    }, Named.`as`("extract-block")
+                ).peek(
+                    { _, block -> logger.debug("→ block ${block.header.height} (${block.data.txsCount} txs)") },
+                    Named.`as`("log-block-extraction")
+                ).flatMapValues(
+                    { block ->
+                        block.data.txsList
+                    }, Named.`as`("extract-transactions")
+                ).mapValues(
+                    { tx ->
+                        tx.toByteArray()
+                    }, Named.`as`("convert-transactions-to-bytearray")
+                ).to(
+                    topicOut, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("output")
+                )
+            }
+        )
+    }.build()
+}
