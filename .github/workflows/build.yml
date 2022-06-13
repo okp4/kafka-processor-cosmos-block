@@ -55,11 +55,6 @@ jobs:
           maven.credentials.password=${{ secrets.MAVEN_REPOSITORY_PASSWORD }}
           EOF
 
-      - name: Build kotlin
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: build -x check
-
       - name: Build docker image
         run: |
           docker build .
