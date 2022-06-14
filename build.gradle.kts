@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.allopen") version "1.6.10"
     id("io.quarkus")
 
-//    id("maven-publish")
+    id("maven-publish")
 
     id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
     id("io.gitlab.arturbosch.detekt") version "1.20.0"
@@ -111,21 +111,24 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-// publishing {
-//     publications {
-//         create<MavenPublication>("maven") {
-//             from(components["java"])
-//             artifact(tasks["fatJar"])
-//         }
-//     }
-//     repositories {
-//         maven {
-//             name = "GitHubPackages"
-//             url = uri("https://maven.pkg.github.com/okp4/${project.name}")
-//             credentials {
-//                 username = project.property("maven.credentials.username") as String
-//                 password = project.property("maven.credentials.password") as String
-//             }
-//         }
-//     }
-// }
+tasks.withType<GenerateModuleMetadata> {
+    suppressedValidationErrors.add("enforced-platform")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/okp4/${project.name}")
+            credentials {
+                username = project.property("maven.credentials.username") as String
+                password = project.property("maven.credentials.password") as String
+            }
+        }
+    }
+}
