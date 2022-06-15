@@ -1,8 +1,7 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm") version "1.6.21"
-    application
+    kotlin("plugin.allopen") version "1.6.10"
+    id("io.quarkus")
 
     id("maven-publish")
 
@@ -15,11 +14,7 @@ ktlint {
 }
 
 group = "com.okp4"
-description = "A Kafka Streams Processor to unwrap CØSMOS blocks into CØSMOS transactions"
-
-application {
-    mainClass.set("com.okp4.processor.cosmos.MainKt")
-}
+description = "A Kafka Streams Processor built with Quarkus to unwrap CØSMOS blocks into CØSMOS transactions"
 
 fun prepareVersion(): String {
     val digits = (project.property("project.version") as String).split(".")
@@ -52,54 +47,55 @@ repositories {
     }
 }
 
+val quarkusPlatformGroupId: String by project
+val quarkusPlatformArtifactId: String by project
+val quarkusPlatformVersion: String by project
+
 dependencies {
-    val kafkaStreamVersion = "3.1.0"
-    api("org.apache.kafka:kafka-streams:$kafkaStreamVersion")
-
-    val slf4jVersion = "1.7.36"
-    api("org.slf4j:slf4j-api:$slf4jVersion")
-    api("org.slf4j:slf4j-log4j12:$slf4jVersion")
-
-    val micrometerVersion = "1.9.0"
-    api("io.micrometer:micrometer-core:$micrometerVersion")
-    api("io.micrometer:micrometer-registry-prometheus:$micrometerVersion")
+    implementation(enforcedPlatform("$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion"))
+    implementation(enforcedPlatform("$quarkusPlatformGroupId:quarkus-camel-bom:$quarkusPlatformVersion"))
+    implementation("io.quarkus:quarkus-grpc")
+    implementation("io.quarkus:quarkus-kotlin")
+    implementation("org.apache.camel.quarkus:camel-quarkus-protobuf")
+    implementation("io.quarkus:quarkus-kafka-streams")
+    implementation("io.quarkus:quarkus-micrometer")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("io.quarkus:quarkus-arc")
+    implementation("io.quarkus:quarkus-smallrye-health")
 
     val cosmosSdkVersion = "1.1"
-    implementation("com.okp4.grpc:cosmos-sdk:$cosmosSdkVersion")
-
-    val grpcVersion = "1.45.1"
-    api("io.grpc:grpc-protobuf:$grpcVersion")
+    api("com.okp4.grpc:cosmos-sdk:$cosmosSdkVersion")
 
     testImplementation(kotlin("test"))
 
-    val kotestVersion = "5.2.3"
+    val kotestVersion = "5.3.0"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
     testImplementation("io.kotest:kotest-property:$kotestVersion")
     testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
 
+    val kafkaStreamVersion = "3.1.0"
     testImplementation("org.apache.kafka:kafka-streams-test-utils:$kafkaStreamVersion")
-}
-
-tasks {
-    val fatJar = register<Jar>("fatJar") {
-        dependsOn.addAll(listOf("compileJava", "compileKotlin", "processResources"))
-        archiveClassifier.set("standalone")
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        manifest { attributes(mapOf("Main-Class" to application.mainClass)) }
-        val sourcesMain = sourceSets.main.get()
-        val contents = configurations.runtimeClasspath.get()
-            .map { if (it.isDirectory) it else zipTree(it) } +
-            sourcesMain.output
-        from(contents)
-    }
-    build {
-        dependsOn(fatJar)
-    }
 }
 
 tasks.register("lint") {
     dependsOn.addAll(listOf("ktlintCheck", "detekt"))
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+allOpen {
+    annotation("javax.ws.rs.Path")
+    annotation("javax.enterprise.context.ApplicationScoped")
+    annotation("io.quarkus.test.junit.QuarkusTest")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+    kotlinOptions.javaParameters = true
 }
 
 tasks.withType<Test>().configureEach {
@@ -114,25 +110,14 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.apply {
-        jvmTarget = "11"
-        allWarningsAsErrors = true
-    }
-}
-
-tasks.named<KotlinCompile>("compileTestKotlin") {
-    kotlinOptions.apply {
-        jvmTarget = "11"
-        allWarningsAsErrors = false
-    }
+tasks.withType<GenerateModuleMetadata> {
+    suppressedValidationErrors.add("enforced-platform")
 }
 
 publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
-            artifact(tasks["fatJar"])
         }
     }
     repositories {
