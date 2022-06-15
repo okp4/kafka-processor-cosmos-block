@@ -5,7 +5,7 @@ COPY --chown=quarkus:quarkus . /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN ./gradlew build -Dquarkus.package.type=native --no-daemon
+RUN ./gradlew build -x check -Dquarkus.package.type=native --no-daemon
 
 # Stage 2 : run
 FROM quay.io/quarkus/quarkus-micro-image:1.0
