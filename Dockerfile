@@ -16,4 +16,4 @@ COPY --from=build /usr/src/app/build/*-runner /work/application
 
 EXPOSE 8080
 
-CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]
+ENTRYPOINT ["./application", "-Dquarkus.http.host=0.0.0.0"]
