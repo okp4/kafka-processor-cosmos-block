@@ -7,14 +7,17 @@ jobs:
   lint:
     if: github.ref == 'refs/heads/main' && github.actor == 'bot-anik'
     uses: ./.github/workflows/lint.yml
+    secrets: inherit
 
   build:
     if: github.ref == 'refs/heads/main' && github.actor == 'bot-anik'
     uses: ./.github/workflows/build.yml
+    secrets: inherit
 
   test:
     if: github.ref == 'refs/heads/main' && github.actor == 'bot-anik'
     uses: ./.github/workflows/test.yml
+    secrets: inherit
 
   perfom-release:
     if: github.ref == 'refs/heads/main' && github.actor == 'bot-anik'
