@@ -1,5 +1,17 @@
 # Kafka processor CØSMOS block
 
+# [1.1.0](https://github.com/okp4/kafka-processor-cosmos-block/compare/v1.0.0...v1.1.0) (2022-07-20)
+
+
+### Bug Fixes
+
+* change application properties default values ([7e4d6cb](https://github.com/okp4/kafka-processor-cosmos-block/commit/7e4d6cb2ebc924fbce43a22495426369ec840e76))
+
+
+### Features
+
+* add quarkus native dockerfile ([1e41df9](https://github.com/okp4/kafka-processor-cosmos-block/commit/1e41df9563c6402c30ebcf17f984ffbb2ee83358))
+
 # 1.0.0 (2022-04-21)
 
 
