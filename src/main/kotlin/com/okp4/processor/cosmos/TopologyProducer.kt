@@ -7,6 +7,7 @@ import org.apache.kafka.streams.kstream.*
 import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.slf4j.LoggerFactory
 import tendermint.types.BlockOuterClass
+import java.util.*
 import javax.enterprise.context.ApplicationScoped
 import javax.enterprise.inject.Produces
 
@@ -17,10 +18,12 @@ import javax.enterprise.inject.Produces
 class TopologyProducer {
     @field:ConfigProperty(name = "topic.in", defaultValue = "topic.in")
     lateinit var topicIn: String
+
     @field:ConfigProperty(name = "topic.out", defaultValue = "topic.out")
     lateinit var topicOut: String
-    @field:ConfigProperty(name = "topic.error", defaultValue = "")
-    var topicError: String? = null
+
+    @field:ConfigProperty(name = "topic.error")
+    var topicError: Optional<String> = Optional.empty()
 
     @Produces
     fun buildTopology(): Topology {
@@ -44,10 +47,11 @@ class TopologyProducer {
                     )
                         .mapValues({ pair -> pair.first }, Named.`as`("extract-original-bytearray"))
                         .apply {
-                            if (!topicError.isNullOrEmpty()) {
+                            if (topicError.isPresent) {
                                 logger.info("Failed block will be sent to the topic $topicError")
                                 to(
-                                    topicError, Produced.with(Serdes.String(), Serdes.ByteArray()).withName("error")
+                                    topicError.get(),
+                                    Produced.with(Serdes.String(), Serdes.ByteArray()).withName("error")
                                 )
                             }
                         }

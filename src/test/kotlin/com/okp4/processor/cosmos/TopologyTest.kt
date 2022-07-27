@@ -13,6 +13,7 @@ import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.TopologyTestDriver
 import tendermint.types.BlockOuterClass.Block
 import tendermint.types.Types
+import java.util.*
 import kotlin.random.Random.Default.nextBytes
 
 fun List<TxOuterClass.Tx>.wrapIntoBlock(height: Long): Block = Block.newBuilder().setHeader(
@@ -48,7 +49,7 @@ class TopologyTest : BehaviorSpec({
         val topologyProducer = TopologyProducer().apply {
             topicIn = "in"
             topicOut = "out"
-            topicError = "error"
+            topicError = Optional.of("error")
         }
 
         val testDriver = TopologyTestDriver(topologyProducer.buildTopology(), config)
