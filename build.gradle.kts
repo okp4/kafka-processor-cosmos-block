@@ -74,7 +74,7 @@ dependencies {
     testImplementation("io.kotest:kotest-property:$kotestVersion")
     testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
 
-    val kafkaStreamVersion = "3.2.2"
+    val kafkaStreamVersion = "3.2.3"
     testImplementation("org.apache.kafka:kafka-streams-test-utils:$kafkaStreamVersion")
 }
 
