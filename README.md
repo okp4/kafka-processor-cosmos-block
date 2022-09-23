@@ -2,13 +2,14 @@
 
 > A Kafka Streams Processor to unwrap CØSMOS blocks into CØSMOS transactions powered by Quarkus.
 
-[![version](https://img.shields.io/github/v/release/okp4/kafka-processor-cosmos-block)](https://github.com/okp4/kafka-processor-cosmos-block/releases)
-[![build](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/build.yml/badge.svg)](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/build.yml)
-[![lint](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/lint.yml/badge.svg)](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/lint.yml)
-[![test](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/test.yml/badge.svg)](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/test.yml)
-[![conventional commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
-[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Quarkus](https://img.shields.io/badge/Quarkus-1A2C34?logo=quarkus&logoColor=4695EB)](https://quarkus.io)
+[![version](https://img.shields.io/github/v/release/okp4/kafka-processor-cosmos-block?style=for-the-badge&logo=github)](https://github.com/okp4/kafka-processor-cosmos-block/releases)
+[![build](https://img.shields.io/github/workflow/status/okp4/kafka-processor-cosmos-block/Build?label=build&style=for-the-badge&logo=github)](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/build.yml)
+[![lint](https://img.shields.io/github/workflow/status/okp4/kafka-processor-cosmos-block/Lint?label=lint&style=for-the-badge&logo=github)](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/lint.yml)
+[![test](https://img.shields.io/github/workflow/status/okp4/kafka-processor-cosmos-block/Test?label=test&style=for-the-badge&logo=github)](https://github.com/okp4/kafka-processor-cosmos-block/actions/workflows/test.yml)
+[![conventional commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=for-the-badge&logo=conventionalcommits)](https://conventionalcommits.org)
+[![contributor covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg?style=for-the-badge)](https://github.com/okp4/.github/blob/main/CODE_OF_CONDUCT.md)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg?style=for-the-badge)](https://opensource.org/licenses/BSD-3-Clause)
+[![Quarkus](https://img.shields.io/badge/Quarkus-1A2C34?logo=quarkus&logoColor=4695EB&style=for-the-badge)](https://quarkus.io)
 
 ## Purpose
 
@@ -58,3 +59,10 @@ If you are on linux/mac then open a terminal, go into the root directory and run
 ```
 
 This command line produces a _native_ executable: `kafka-processor-cosmos-block-X.Y-runner`
+
+## You want to get involved? 😍
+
+Please check out OKP4 health files :
+
+- [Contributing](https://github.com/okp4/.github/blob/main/CONTRIBUTING.md)
+- [Code of conduct](https://github.com/okp4/.github/blob/main/CODE_OF_CONDUCT.md)
