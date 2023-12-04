@@ -5,7 +5,7 @@ plugins {
 
     id("maven-publish")
 
-    id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
+    id("org.jlleitschuh.gradle.ktlint") version "12.0.2"
     id("io.gitlab.arturbosch.detekt") version "1.23.1"
 }
 
